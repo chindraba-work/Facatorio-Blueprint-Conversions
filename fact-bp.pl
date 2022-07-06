@@ -202,16 +202,17 @@ sub encode_bp {
     # and the inbetween state of the unencoded blueprint string _is_ binary.
     binmode INFILE;
     binmode OUTFILE;
-    my ($json_data, $json_string, $output, $raw_data, $status, $tail_data, $zlib);
+    my ($json_data, @json_lines, $json_string, $output, $raw_data, $status, $tail_data, $zlib);
 
     # Open a stream to zlib deflation, fatal error if not possible
     $zlib = deflateInit()
         or die "Cannot create a deflation stream\n" ;
     # Load the JSON file
-    chomp ($json_string = <INFILE>);
+    chomp (@json_lines = <INFILE>);
+    $json_string = join '', @json_lines;
     close INFILE;
     # Force it into minified format
-    $json_data = JSON->new->utf8->encode (decode_json $json_string);
+    $json_data = JSON::PP->new->utf8->encode (decode_json $json_string);
     # Compress it with zlib to level 9
     ($raw_data, $status) = $zlib->deflate($json_data, Z_BEST_COMPRESSION);
     $status == Z_OK
